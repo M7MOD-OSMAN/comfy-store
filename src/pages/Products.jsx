@@ -9,7 +9,7 @@ export const loader = async ({ request }) => {
 
   return { products: response.data.data, meta: response.data.meta, params }
 }
-
+// testing github desktop
 const Products = () => {
   return (
     <>
