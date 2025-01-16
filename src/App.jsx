@@ -1,4 +1,7 @@
-import { ErrorElement } from './components'
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
+
+import { ErrorElement } from "./components"
 import {
   About,
   Cart,
@@ -11,65 +14,89 @@ import {
   Register,
   Login,
   SingleProduct,
-} from './pages'
-import { RouterProvider, createBrowserRouter } from 'react-router-dom'
+} from "./pages"
+import { RouterProvider, createBrowserRouter } from "react-router-dom"
+// loaders
+import { loader as landingLoader } from "./pages/Landing"
+import { loader as singleProductLoader } from "./pages/SingleProduct"
+import { loader as productsLoader } from "./pages/Products"
+import { loader as checkoutLoader } from "./pages/Checkout.jsx"
+import { loader as ordersLoader } from "./pages/Orders"
 
-import { loader as landingLoader } from './pages/Landing'
-import { loader as singleProductLoader } from './pages/SingleProduct'
-import { loader as productsLoader } from './pages/Products'
+// actions
+import { action as registerAction } from "./pages/Register"
+import { action as checkoutAction } from "./components/CheckoutForm"
+import { action as loginAction } from "./pages/Login"
+import { store } from "./store.js"
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5,
+    },
+  },
+})
 const router = createBrowserRouter([
   {
-    path: '/',
+    path: "/",
     element: <HomeLayout />,
     errorElement: <Error />,
     children: [
       {
         index: true,
         element: <Landing />,
-        loader: landingLoader,
+        loader: landingLoader(queryClient),
         errorElement: <ErrorElement />,
       },
       {
-        path: 'products',
+        path: "products",
         element: <Products />,
-        loader: productsLoader,
+        loader: productsLoader(queryClient),
         errorElement: <ErrorElement />,
       },
       {
-        path: 'products/:id',
-        loader: singleProductLoader,
+        path: "products/:id",
         element: <SingleProduct />,
+        loader: singleProductLoader(queryClient),
         errorElement: <ErrorElement />,
       },
       {
-        path: 'cart',
+        path: "cart",
         element: <Cart />,
       },
-      { path: 'about', element: <About /> },
+      { path: "about", element: <About /> },
       {
-        path: 'checkout',
+        path: "checkout",
         element: <Checkout />,
+        loader: checkoutLoader(store),
+        action: checkoutAction(store, queryClient),
       },
       {
-        path: 'orders',
+        path: "orders",
         element: <Orders />,
+        loader: ordersLoader(store, queryClient),
       },
     ],
   },
   {
-    path: '/login',
+    path: "/login",
     element: <Login />,
     errorElement: <Error />,
+    action: loginAction(store),
   },
   {
-    path: '/register',
+    path: "/register",
     element: <Register />,
     errorElement: <Error />,
+    action: registerAction,
   },
 ])
-function App() {
-  return <RouterProvider router={router} />
+const App = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
+  )
 }
-
 export default App
